@@ -280,7 +280,7 @@ def get_gemini_response(prompt):
         if not api_key:
             return "⚠️ Gemini API key not configured. Please add it in Streamlit secrets."
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = genai.GenerativeModel("gemini-3.6-flash")
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
