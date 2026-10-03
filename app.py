@@ -473,6 +473,34 @@ Just list the questions with marks in brackets, no answers."""
             result = get_gemini_response(prompt)
             st.markdown(result)
 
+    st.divider()
+    st.subheader("📄 Real Previous Year Question Papers")
+    pyqs_folder = "pyqs"
+    if os.path.exists(pyqs_folder):
+        def normalize(s):
+            return ''.join(c.lower() for c in s if c.isalnum())
+
+        subject_key = normalize(subject_choice)
+        all_files = sorted(os.listdir(pyqs_folder))
+        matched = [f for f in all_files if f.lower().endswith('.pdf') and (normalize(f.replace('.pdf', '')) in subject_key or subject_key in normalize(f.replace('.pdf', '')))]
+
+        if matched:
+            for pdf_file in matched:
+                pdf_path = os.path.join(pyqs_folder, pdf_file)
+                with open(pdf_path, "rb") as f:
+                    pdf_bytes = f.read()
+                st.download_button(
+                    label=f"📥 Download {pdf_file}",
+                    data=pdf_bytes,
+                    file_name=pdf_file,
+                    mime="application/pdf",
+                    key=f"pdf_{pdf_file}"
+                )
+        else:
+            st.info("No scanned PYQs uploaded yet for this subject.")
+    else:
+        st.info("No scanned PYQs uploaded yet for this subject.")
+
 # ---------------- BOOKS & REFERENCES ----------------
 elif page == "Books & References":
     st.header("📚 Books & References")
