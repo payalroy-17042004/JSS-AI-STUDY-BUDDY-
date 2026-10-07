@@ -445,10 +445,10 @@ visualization before analysis, analytics for unstructured data."""),
      "File service architecture, name services, distributed shared memory"),
 ]
 
-cur.executemany(
-    "INSERT INTO units (subject_id, unit_number, unit_title, topics) VALUES (?,?,?,?)",
-    units
-)
+    cur.executemany(
+        "INSERT INTO units (subject_id, unit_number, unit_title, topics) VALUES (?,?,?,?)",
+        units
+    )
 
 # ============================================================
 # LLM SETUP (Gemini)
