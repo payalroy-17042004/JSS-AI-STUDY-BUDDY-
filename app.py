@@ -691,8 +691,10 @@ Rules:
 
             raw_result = get_gemini_response(prompt)
 
-            questions = parse_quiz_response(raw_result)
+st.write("DEBUG - Gemini response:")
+st.code(raw_result)
 
+questions = parse_quiz_response(raw_result)
             if questions:
 
                 # Clear answers from previous quiz
