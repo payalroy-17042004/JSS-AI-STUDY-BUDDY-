@@ -790,7 +790,6 @@ Length instructions:
 """
             result = get_gemini_response(prompt)
             st.markdown(result)
-
 # ---------------- MCQ TEST ----------------
 elif page == "MCQ Test":
     st.header("🧠 MCQ Test")
