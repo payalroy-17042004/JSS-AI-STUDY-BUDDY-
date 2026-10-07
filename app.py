@@ -1,6 +1,8 @@
 import streamlit as st
 import sqlite3
 import os
+import json
+import re
 from datetime import datetime
 
 # ============================================================
@@ -312,7 +314,56 @@ def get_gemini_response(prompt):
         return response.text
     except Exception as e:
         return f"⚠️ Error generating response: {e}"
+def parse_quiz_response(text):
+    try:
+        cleaned = text.strip()
 
+        # Remove markdown code fences if Gemini adds them
+        cleaned = re.sub(
+            r"^```(?:json)?\s*",
+            "",
+            cleaned,
+            flags=re.IGNORECASE
+        )
+
+        cleaned = re.sub(
+            r"\s*```$",
+            "",
+            cleaned
+        )
+
+        data = json.loads(cleaned)
+
+        # Support both:
+        # [ {...}, {...} ]
+        # and {"questions": [ {...}, {...} ]}
+        if isinstance(data, dict) and "questions" in data:
+            data = data["questions"]
+
+        if not isinstance(data, list):
+            return None
+
+        # Validate each question
+        for q in data:
+            if not all(
+                key in q
+                for key in ["question", "options", "answer", "explanation"]
+            ):
+                return None
+
+            if not isinstance(q["options"], dict):
+                return None
+
+            if set(q["options"].keys()) != {"A", "B", "C", "D"}:
+                return None
+
+            if q["answer"] not in ["A", "B", "C", "D"]:
+                return None
+
+        return data
+
+    except Exception:
+        return None
 # ============================================================
 # APP START
 # ============================================================
@@ -556,20 +607,259 @@ Answer length: {length}.
 
 # ---------------- MCQ TEST ----------------
 elif page == "MCQ Test":
-    st.header("🧠 MCQ Test Generator")
-    sem_choice = st.selectbox("Semester", semesters, key="mcq_sem")
-    subs_in_sem = [s for s in all_subjects if s[2] == sem_choice]
-    subject_choice = st.selectbox("Subject", [s[1] for s in subs_in_sem], key="mcq_subject")
-    num_q = st.slider("Number of questions", 3, 10, 5)
+    st.header("🧠 MCQ Test")
 
+    # Initialize quiz session state
+    if "mcq_questions" not in st.session_state:
+        st.session_state.mcq_questions = None
+
+    if "mcq_subject" not in st.session_state:
+        st.session_state.mcq_subject = None
+
+    if "mcq_submitted" not in st.session_state:
+        st.session_state.mcq_submitted = False
+
+    if "mcq_score" not in st.session_state:
+        st.session_state.mcq_score = None
+
+    # ---------------- QUIZ SETTINGS ----------------
+    sem_choice = st.selectbox(
+        "Semester",
+        semesters,
+        key="mcq_sem"
+    )
+
+    subs_in_sem = [
+        s for s in all_subjects
+        if s[2] == sem_choice
+    ]
+
+    subject_choice = st.selectbox(
+        "Subject",
+        [s[1] for s in subs_in_sem],
+        key="mcq_subject"
+    )
+
+    num_q = st.slider(
+        "Number of questions",
+        3,
+        10,
+        5,
+        key="mcq_num"
+    )
+
+    # ---------------- GENERATE QUIZ ----------------
     if st.button("Generate MCQ Test"):
+
         with st.spinner("Creating quiz..."):
-            prompt = f"""Create {num_q} multiple choice questions for an MCA student on the subject: {subject_choice}.
-For each question, give 4 options (A-D), and clearly indicate the correct answer with a short explanation.
+
+            prompt = f"""Create exactly {num_q} multiple choice questions
+for an MCA student studying the subject: {subject_choice}.
+
 {lang_instruction}
-Format each question clearly numbered."""
-            result = get_gemini_response(prompt)
-            st.markdown(result)
+
+Return ONLY valid JSON.
+Do not use markdown.
+Do not use code fences.
+Do not include any extra text before or after the JSON.
+
+Use exactly this structure:
+
+[
+  {{
+    "question": "Question text",
+    "options": {{
+      "A": "Option A",
+      "B": "Option B",
+      "C": "Option C",
+      "D": "Option D"
+    }},
+    "answer": "A",
+    "explanation": "Short explanation of the correct answer."
+  }}
+]
+
+Rules:
+- Create exactly {num_q} questions.
+- Each question must have exactly four options.
+- Options must be labelled A, B, C and D.
+- The answer must be exactly A, B, C or D.
+- Questions must be relevant to {subject_choice}.
+- Do not repeat questions.
+- Keep explanations short and clear.
+"""
+
+            raw_result = get_gemini_response(prompt)
+
+            questions = parse_quiz_response(raw_result)
+
+            if questions:
+
+                # Clear answers from previous quiz
+                for i in range(10):
+                    st.session_state.pop(
+                        f"mcq_answer_{i}",
+                        None
+                    )
+
+                st.session_state.mcq_questions = questions
+                st.session_state.mcq_subject = subject_choice
+                st.session_state.mcq_submitted = False
+                st.session_state.mcq_score = None
+
+            else:
+                st.error(
+                    "⚠️ The AI returned an unexpected format. "
+                    "Please try generating the test again."
+                )
+
+    # ---------------- DISPLAY QUIZ ----------------
+    if (
+        st.session_state.mcq_questions
+        and st.session_state.mcq_subject == subject_choice
+    ):
+
+        questions = st.session_state.mcq_questions
+
+        st.divider()
+
+        st.subheader(
+            f"📝 {st.session_state.mcq_subject} — Quiz"
+        )
+
+        st.info(
+            f"Answer all {len(questions)} questions and then click "
+            "**Submit Test**."
+        )
+
+        for i, q in enumerate(questions):
+
+            st.markdown(
+                f"### Q{i + 1}. {q['question']}"
+            )
+
+            options = q["options"]
+
+            st.radio(
+                "Select your answer:",
+                ["A", "B", "C", "D"],
+                format_func=lambda x, opts=options:
+                    f"{x}. {opts[x]}",
+                key=f"mcq_answer_{i}",
+                disabled=st.session_state.mcq_submitted
+            )
+
+        # ---------------- SUBMIT TEST ----------------
+        if not st.session_state.mcq_submitted:
+
+            if st.button("✅ Submit Test"):
+
+                score = 0
+
+                for i, q in enumerate(questions):
+
+                    selected = st.session_state.get(
+                        f"mcq_answer_{i}"
+                    )
+
+                    if selected == q["answer"]:
+                        score += 1
+
+                st.session_state.mcq_score = score
+                st.session_state.mcq_submitted = True
+
+                st.rerun()
+
+        # ---------------- SHOW RESULT ----------------
+        if st.session_state.mcq_submitted:
+
+            score = st.session_state.mcq_score
+            total = len(questions)
+
+            percentage = int(
+                (score / total) * 100
+            )
+
+            st.divider()
+
+            st.subheader("📊 Test Result")
+
+            if percentage >= 80:
+                st.success(
+                    f"🎉 Excellent! Your score is "
+                    f"**{score}/{total} ({percentage}%)**"
+                )
+
+            elif percentage >= 50:
+                st.info(
+                    f"👍 Good attempt! Your score is "
+                    f"**{score}/{total} ({percentage}%)**"
+                )
+
+            else:
+                st.warning(
+                    f"📚 Keep practicing! Your score is "
+                    f"**{score}/{total} ({percentage}%)**"
+                )
+
+            st.subheader("📖 Answer Review")
+
+            for i, q in enumerate(questions):
+
+                selected = st.session_state.get(
+                    f"mcq_answer_{i}"
+                )
+
+                correct = q["answer"]
+
+                if selected == correct:
+
+                    st.markdown(
+                        f"**Q{i + 1}: ✅ Correct**"
+                    )
+
+                else:
+
+                    st.markdown(
+                        f"**Q{i + 1}: ❌ Incorrect**"
+                    )
+
+                    if selected:
+                        st.write(
+                            f"Your answer: "
+                            f"{selected}. "
+                            f"{q['options'][selected]}"
+                        )
+                    else:
+                        st.write("Your answer: Not attempted")
+
+                    st.write(
+                        f"Correct answer: "
+                        f"{correct}. "
+                        f"{q['options'][correct]}"
+                    )
+
+                st.caption(
+                    f"Explanation: {q['explanation']}"
+                )
+
+                st.divider()
+
+            # ---------------- NEW TEST ----------------
+            if st.button("🔄 Generate New Test"):
+
+                st.session_state.mcq_questions = None
+                st.session_state.mcq_subject = None
+                st.session_state.mcq_submitted = False
+                st.session_state.mcq_score = None
+
+                for i in range(10):
+                    st.session_state.pop(
+                        f"mcq_answer_{i}",
+                        None
+                    )
+
+                st.rerun()
 
 # ---------------- PYQ BANK ----------------
 elif page == "PYQ Bank":
