@@ -328,11 +328,14 @@ if "user_name" not in st.session_state:
 
 # ---------------- LOGIN PAGE ----------------
 if not st.session_state.logged_in:
-        col1, col2 = st.columns([1, 5])
+    col1, col2 = st.columns([1, 5])
+
     with col1:
         st.image("jss_logo.png", width=80)
+
     with col2:
         st.title("JSS AI Study Buddy")
+
     st.caption("Your AI-powered companion for MCA studies — notes, PYQs, quizzes, and more.")
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
