@@ -141,7 +141,7 @@ def seed_data(cur):
     cur.execute("SELECT id, subject_name FROM subjects")
     sid = {name: i for i, name in cur.fetchall()}
 
-   units = [
+       units = [
     # Fundamentals of Mathematics
     (sid["Fundamentals of Mathematics for Computer Applications"], "Unit I", "Linear Systems and Matrices",
      "Complex matrices, Hermitian/Skew-Hermitian/Unitary matrices, elementary transformation, rank, Cayley-Hamilton theorem, eigenvalues and eigenvectors"),
