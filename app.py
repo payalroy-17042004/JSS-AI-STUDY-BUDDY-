@@ -720,6 +720,7 @@ Length instructions:
 Use clear headings, subheadings, numbered lists and bullet points where helpful.
 Use simple academic language that an MCA student can understand.
 Do not include information unrelated to the selected subject or topic.
+"""
 
             result = get_gemini_response(prompt)
 
