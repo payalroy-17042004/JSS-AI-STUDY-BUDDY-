@@ -449,7 +449,7 @@ cur.executemany(
     "INSERT INTO units (subject_id, unit_number, unit_title, topics) VALUES (?,?,?,?)",
     units
 )
-    cur.executemany(
+        cur.executemany(
         "INSERT INTO units (subject_id, unit_number, unit_title, topics) VALUES (?,?,?,?)",
         units
     )
