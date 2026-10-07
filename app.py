@@ -648,7 +648,7 @@ elif page == "MCQ Test":
         key="mcq_num"
     )
 
-    # ---------------- GENERATE QUIZ ----------------
+       # ---------------- GENERATE QUIZ ----------------
     if st.button("Generate MCQ Test"):
 
         with st.spinner("Creating quiz..."):
@@ -691,12 +691,12 @@ Rules:
 
             raw_result = get_gemini_response(prompt)
 
-st.write("DEBUG - Gemini response:")
-st.code(raw_result)
+            st.write("DEBUG - Gemini response:")
+            st.code(raw_result)
 
-questions = parse_quiz_response(raw_result)
+            questions = parse_quiz_response(raw_result)
+
             if questions:
-
                 # Clear answers from previous quiz
                 for i in range(10):
                     st.session_state.pop(
