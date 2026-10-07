@@ -1051,8 +1051,8 @@ elif page == "PYQ Bank":
 Generate 5 likely exam questions (mix of 2-mark, 5-mark and 10-mark style questions) that could appear in a semester exam.
 {lang_instruction}
 Just list the questions with marks in brackets, no answers."""
-            result = get_gemini_response(prompt)
-            st.markdown(result)
+        result = get_gemini_response(prompt)
+        st.markdown(result)
 
     st.divider()
     st.subheader("📄 Real Previous Year Question Papers")
