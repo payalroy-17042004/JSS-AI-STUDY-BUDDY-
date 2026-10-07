@@ -762,7 +762,7 @@ elif page == "Ask a Question":
     length = st.select_slider("Answer length", options=["Short", "Concise", "Long"], value="Concise", key="ask_length")
     question = st.text_area("Your question")
 
-       if st.button("Get Answer") and question:
+    if st.button("Get Answer") and question:
         with st.spinner("Thinking..."):
             prompt = f"""You are a helpful academic tutor for an MCA student studying {subject_choice}.
 
