@@ -421,18 +421,48 @@ elif page == "AI Notes Generator":
         context = topic_text
 
     length = st.select_slider("Answer length", options=["Short", "Concise", "Long"], value="Concise")
-
+note_type = st.selectbox(
+    "Note Type",
+    ["Detailed Study Notes", "Quick Revision", "Exam-Oriented Notes"],
+    help="Choose how the AI should structure the generated notes."
+)
     if st.button("Generate Notes") and topic_text:
         with st.spinner("Generating notes..."):
-            prompt = f"""You are a helpful academic tutor for an MCA student at JSS University.
+           prompt = f"""You are a helpful academic tutor for an MCA student at JSS University.
+
 Subject: {subject_choice}
 Topic: {topic_text}
 Context/related subtopics: {context}
 
-Write clear, well-structured study notes on this topic suitable for exam preparation.
-Length: {length} (Short = key points only, Concise = balanced paragraph explanation, Long = detailed explanation with examples).
+Note Type: {note_type}
+Length: {length}
+
+Generate clear, accurate and well-structured study notes.
+
+Follow these note-type instructions:
+
+- Detailed Study Notes:
+  Explain the concepts clearly with definitions, important points,
+  examples and explanations where appropriate.
+
+- Quick Revision:
+  Focus on key definitions, important facts, formulas, keywords
+  and short bullet points that can be revised quickly before an exam.
+
+- Exam-Oriented Notes:
+  Focus on concepts important for university examinations.
+  Include important definitions, key points, comparisons,
+  examples and possible exam-focused points where appropriate.
+
+Length instructions:
+- Short = key points only
+- Concise = balanced explanation
+- Long = detailed explanation with examples
+
 {lang_instruction}
-Use headings and bullet points where helpful."""
+
+Use clear headings, subheadings and bullet points where helpful.
+Do not include information unrelated to the selected subject or topic."""
             result = get_gemini_response(prompt)
             st.markdown(result)
             cur.execute("INSERT INTO generated_notes (user_id, subject_id, topic, content) VALUES (?,?,?,?)",
