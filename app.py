@@ -764,10 +764,30 @@ elif page == "Ask a Question":
 
     if st.button("Get Answer") and question:
         with st.spinner("Thinking..."):
-            prompt = f"""You are a helpful academic tutor for an MCA student studying {subject_choice}.
+           prompt = f"""You are a helpful academic tutor for an MCA student studying {subject_choice}.
+
 Question: {question}
-Answer length: {length}.
-{lang_instruction}"""
+Answer length: {length}
+
+Give a clear, accurate and easy-to-understand academic answer.
+
+Answer guidelines:
+- Start with a direct explanation of the answer.
+- Explain important concepts using simple academic language.
+- Use headings, bullet points or numbered lists where helpful.
+- Include examples when they improve understanding.
+- If the question asks for a comparison, use a clear comparison format.
+- If the question involves steps or a process, explain them in order.
+- Focus only on the asked question and the selected subject.
+- Do not invent facts or include unrelated information.
+
+Length instructions:
+- Short = brief answer with key points
+- Concise = balanced explanation with important details
+- Long = detailed explanation with examples
+
+{lang_instruction}
+"""
             result = get_gemini_response(prompt)
             st.markdown(result)
 
