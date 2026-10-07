@@ -9,6 +9,33 @@ from datetime import datetime
 st.set_page_config(page_title="JSS AI Study Buddy", page_icon="📚", layout="wide")
 
 DB_PATH = "study_buddy.db"
+# Custom CSS for a more colorful, polished look
+st.markdown("""
+<style>
+    .stButton>button {
+        border-radius: 10px;
+        border: none;
+        background: linear-gradient(90deg, #6A0DAD, #9B59B6);
+        color: white;
+        font-weight: 600;
+        padding: 0.5rem 1.2rem;
+        transition: all 0.2s ease;
+    }
+    .stButton>button:hover {
+        transform: scale(1.03);
+        box-shadow: 0 4px 12px rgba(106, 13, 173, 0.3);
+    }
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #F3E8FF, #FFFFFF);
+    }
+    h1, h2, h3 {
+        color: #6A0DAD;
+    }
+    .stAlert {
+        border-radius: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # ============================================================
 # DATABASE SETUP (runs automatically, only once)
@@ -301,7 +328,11 @@ if "user_name" not in st.session_state:
 
 # ---------------- LOGIN PAGE ----------------
 if not st.session_state.logged_in:
-    st.title("📚 JSS AI Study Buddy")
+        col1, col2 = st.columns([1, 5])
+    with col1:
+        st.image("jss_logo.png", width=80)
+    with col2:
+        st.title("JSS AI Study Buddy")
     st.caption("Your AI-powered companion for MCA studies — notes, PYQs, quizzes, and more.")
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
@@ -335,6 +366,7 @@ if not st.session_state.logged_in:
     st.stop()
 
 # ---------------- MAIN APP (after login) ----------------
+st.sidebar.image("jss_logo.png", width=70)
 st.sidebar.title(f"👋 Hi, {st.session_state.user_name}")
 page = st.sidebar.radio("Navigate", ["Syllabus", "AI Notes Generator", "Ask a Question", "MCQ Test", "PYQ Bank", "Books & References"])
 language = st.sidebar.selectbox("Response Language / भाषा", ["English", "Hindi"])
