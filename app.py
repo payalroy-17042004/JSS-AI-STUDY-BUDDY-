@@ -679,13 +679,14 @@ Context/related subtopics: {context}
 Note Type: {note_type}
 Length: {length}
 
-Generate clear, accurate and well-structured study notes.
+Generate clear, accurate and well-structured study notes suitable for an MCA student.
 
 Follow these note-type instructions:
 
 - Detailed Study Notes:
   Explain the concepts clearly with definitions, important points,
-  examples and explanations where appropriate.
+  examples, advantages/disadvantages, applications and explanations
+  where appropriate.
 
 - Quick Revision:
   Focus on key definitions, important facts, formulas, keywords
@@ -694,7 +695,20 @@ Follow these note-type instructions:
 - Exam-Oriented Notes:
   Focus on concepts important for university examinations.
   Include important definitions, key points, comparisons,
-  examples and exam-focused points where appropriate.
+  examples, advantages/disadvantages and likely exam points
+  where appropriate.
+
+Structure the answer as follows where applicable:
+1. Topic Introduction
+2. Definition / Meaning
+3. Main Concepts
+4. Important Points
+5. Example / Illustration
+6. Advantages and Limitations
+7. Applications
+8. Exam Quick Revision
+
+Do not force sections that are not relevant to the selected topic.
 
 Length instructions:
 - Short = key points only
@@ -703,9 +717,9 @@ Length instructions:
 
 {lang_instruction}
 
-Use clear headings, subheadings and bullet points where helpful.
+Use clear headings, subheadings, numbered lists and bullet points where helpful.
+Use simple academic language that an MCA student can understand.
 Do not include information unrelated to the selected subject or topic.
-"""
 
             result = get_gemini_response(prompt)
 
