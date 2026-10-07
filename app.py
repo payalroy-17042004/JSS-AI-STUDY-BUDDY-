@@ -403,32 +403,72 @@ if page == "Syllabus":
 # ---------------- AI NOTES GENERATOR ----------------
 elif page == "AI Notes Generator":
     st.header("📝 AI Notes Generator")
+
     sem_choice = st.selectbox("Semester", semesters, key="notes_sem")
     subs_in_sem = [s for s in all_subjects if s[2] == sem_choice]
-    subject_choice = st.selectbox("Subject", [s[1] for s in subs_in_sem], key="notes_subject")
-    subject_id = next(s[0] for s in subs_in_sem if s[1] == subject_choice)
 
-    cur.execute("SELECT unit_number, unit_title, topics FROM units WHERE subject_id=?", (subject_id,))
+    subject_choice = st.selectbox(
+        "Subject",
+        [s[1] for s in subs_in_sem],
+        key="notes_subject"
+    )
+
+    subject_id = next(
+        s[0] for s in subs_in_sem if s[1] == subject_choice
+    )
+
+    cur.execute(
+        "SELECT unit_number, unit_title, topics FROM units WHERE subject_id=?",
+        (subject_id,)
+    )
     units_list = cur.fetchall()
 
-    mode = st.radio("Generate notes for:", ["Full Unit", "Specific Topic"])
+    mode = st.radio(
+        "Generate notes for:",
+        ["Full Unit", "Specific Topic"]
+    )
+
     if mode == "Full Unit" and units_list:
-        unit_choice = st.selectbox("Select Unit", [f"{u[0]}: {u[1]}" for u in units_list])
+        unit_choice = st.selectbox(
+            "Select Unit",
+            [f"{u[0]}: {u[1]}" for u in units_list]
+        )
+
         topic_text = unit_choice
-        context = next(u[2] for u in units_list if f"{u[0]}: {u[1]}" == unit_choice)
+
+        context = next(
+            u[2]
+            for u in units_list
+            if f"{u[0]}: {u[1]}" == unit_choice
+        )
+
     else:
-        topic_text = st.text_input("Enter specific topic (e.g., 'Logistic Regression')")
+        topic_text = st.text_input(
+            "Enter specific topic (e.g., 'Logistic Regression')"
+        )
         context = topic_text
 
-    length = st.select_slider("Answer length", options=["Short", "Concise", "Long"], value="Concise")
-note_type = st.selectbox(
-    "Note Type",
-    ["Detailed Study Notes", "Quick Revision", "Exam-Oriented Notes"],
-    help="Choose how the AI should structure the generated notes."
-)
+    length = st.select_slider(
+        "Answer length",
+        options=["Short", "Concise", "Long"],
+        value="Concise"
+    )
+
+    note_type = st.selectbox(
+        "Note Type",
+        [
+            "Detailed Study Notes",
+            "Quick Revision",
+            "Exam-Oriented Notes"
+        ],
+        help="Choose how the AI should structure the generated notes."
+    )
+
     if st.button("Generate Notes") and topic_text:
+
         with st.spinner("Generating notes..."):
-           prompt = f"""You are a helpful academic tutor for an MCA student at JSS University.
+
+            prompt = f"""You are a helpful academic tutor for an MCA student at JSS University.
 
 Subject: {subject_choice}
 Topic: {topic_text}
@@ -452,7 +492,7 @@ Follow these note-type instructions:
 - Exam-Oriented Notes:
   Focus on concepts important for university examinations.
   Include important definitions, key points, comparisons,
-  examples and possible exam-focused points where appropriate.
+  examples and exam-focused points where appropriate.
 
 Length instructions:
 - Short = key points only
@@ -462,21 +502,40 @@ Length instructions:
 {lang_instruction}
 
 Use clear headings, subheadings and bullet points where helpful.
-Do not include information unrelated to the selected subject or topic."""
+Do not include information unrelated to the selected subject or topic.
+"""
+
             result = get_gemini_response(prompt)
+
             st.markdown(result)
-            cur.execute("INSERT INTO generated_notes (user_id, subject_id, topic, content) VALUES (?,?,?,?)",
-                        (st.session_state.user_id, subject_id, topic_text, result))
+
+            cur.execute(
+                "INSERT INTO generated_notes (user_id, subject_id, topic, content) VALUES (?,?,?,?)",
+                (
+                    st.session_state.user_id,
+                    subject_id,
+                    topic_text,
+                    result
+                )
+            )
+
             conn.commit()
 
     st.divider()
+
     st.subheader("Your Saved Notes")
-    cur.execute("SELECT topic, content, created_at FROM generated_notes WHERE user_id=? AND subject_id=? ORDER BY created_at DESC LIMIT 5",
-                (st.session_state.user_id, subject_id))
+
+    cur.execute(
+        "SELECT topic, content, created_at "
+        "FROM generated_notes "
+        "WHERE user_id=? AND subject_id=? "
+        "ORDER BY created_at DESC LIMIT 5",
+        (st.session_state.user_id, subject_id)
+    )
+
     for note in cur.fetchall():
         with st.expander(f"{note[0]} — {note[2]}"):
             st.markdown(note[1])
-
 # ---------------- ASK A QUESTION ----------------
 elif page == "Ask a Question":
     st.header("💬 Ask a Question")
