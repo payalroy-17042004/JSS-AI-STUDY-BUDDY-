@@ -937,7 +937,6 @@ Rules:
                     )
 
                 st.session_state.mcq_questions = questions
-                st.session_state.mcq_subject = subject_choice
                 st.session_state.mcq_submitted = False
                 st.session_state.mcq_score = None
 
