@@ -4,6 +4,7 @@ import os
 import json
 import re
 from datetime import datetime
+import google.generativeai as genai
 
 # ============================================================
 # PAGE CONFIG
