@@ -473,11 +473,16 @@ visualization before analysis, analytics for unstructured data."""),
 # ============================================================
 # LLM SETUP (Gemini)
 # ============================================================
+MODEL_CHAIN = [
+    "gemini-2.5-flash"
+]
+
 def get_gemini_response(prompt):
     api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
 
     last_error = ""
+
     for model_name in MODEL_CHAIN:
         try:
             model = genai.GenerativeModel(model_name)
