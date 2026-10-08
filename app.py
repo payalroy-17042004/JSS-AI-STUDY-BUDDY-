@@ -475,7 +475,7 @@ visualization before analysis, analytics for unstructured data."""),
 def get_gemini_response(prompt):
    
     import google.generativeai as genai
-    genai.configure(api_key=api_key)"""
+    genai.configure(api_key=api_key)
 
     last_error = ""
     for model_name in MODEL_CHAIN:
