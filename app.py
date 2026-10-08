@@ -473,8 +473,7 @@ visualization before analysis, analytics for unstructured data."""),
 # LLM SETUP (Gemini)
 # ============================================================
 def get_gemini_response(prompt):
-   
-    import google.generativeai as genai
+    api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
 
     last_error = ""
