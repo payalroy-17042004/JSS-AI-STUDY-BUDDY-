@@ -473,6 +473,61 @@ visualization before analysis, analytics for unstructured data."""),
 # LLM SETUP (Gemini)
 # ============================================================
 def get_gemini_response(prompt):
+    import hashlib
+
+MODEL_CHAIN = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.6-flash",
+]
+
+def _cache_conn():
+    c = sqlite3.connect(DB_PATH, check_same_thread=False)
+    c.execute("CREATE TABLE IF NOT EXISTS response_cache (key TEXT PRIMARY KEY, response TEXT)")
+    return c
+
+def get_gemini_response(prompt):
+    key = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+    try:
+        c = _cache_conn()
+        row = c.execute("SELECT response FROM response_cache WHERE key=?", (key,)).fetchone()
+        c.close()
+        if row:
+            return row[0]
+    except Exception:
+        pass
+
+    try:
+        api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
+    except Exception:
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        return "⚠️ Gemini API key not configured. Please add it in Streamlit secrets."
+
+    import google.generativeai as genai
+    genai.configure(api_key=api_key)
+
+    last_error = ""
+    for model_name in MODEL_CHAIN:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            text = response.text
+            try:
+                c = _cache_conn()
+                c.execute("INSERT OR REPLACE INTO response_cache (key, response) VALUES (?,?)", (key, text))
+                c.commit()
+                c.close()
+            except Exception:
+                pass
+            return text
+        except Exception as e:
+            last_error = str(e)
+            continue
+
+    if "429" in last_error or "quota" in last_error.lower():
+        return "⚠️ The AI service's free daily limit has been reached for now. Answers you generated earlier are still saved, and the syllabus, PYQs and books sections work normally. Please try again later."
+    return f"⚠️ Could not generate a response right now. ({last_error[:150]})"
     try:
         import google.generativeai as genai
         api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
