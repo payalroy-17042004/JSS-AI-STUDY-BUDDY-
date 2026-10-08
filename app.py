@@ -11,6 +11,25 @@ from datetime import datetime
 st.set_page_config(page_title="JSS AI Study Buddy", page_icon="📚", layout="wide")
 
 DB_PATH = "study_buddy.db"
+from syllabus_data import FULL_SYLLABUS
+
+@st.cache_resource
+def refresh_syllabus_once():
+    c = sqlite3.connect(DB_PATH, check_same_thread=False)
+    cu = c.cursor()
+    cu.execute("SELECT id, subject_name FROM subjects")
+    ids = {n: i for i, n in cu.fetchall()}
+    cu.execute("DELETE FROM units")
+    for subject, units in FULL_SYLLABUS.items():
+        if subject in ids:
+            for label, hrs, title, topics in units:
+                cu.execute(
+                    "INSERT INTO units (subject_id, unit_number, unit_title, topics) VALUES (?,?,?,?)",
+                    (ids[subject], f"{label} ({hrs} Hrs)", title, topics),
+                )
+    c.commit()
+    c.close()
+    return True
 # Custom CSS for a more colorful, polished look
 st.markdown("""
 <style>
@@ -519,6 +538,7 @@ def parse_quiz_response(text):
 # APP START
 # ============================================================
 conn = init_db()
+refresh_syllabus_once()
 cur = conn.cursor()
 
 if "logged_in" not in st.session_state:
