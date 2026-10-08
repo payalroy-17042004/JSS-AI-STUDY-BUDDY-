@@ -473,37 +473,7 @@ visualization before analysis, analytics for unstructured data."""),
 # LLM SETUP (Gemini)
 # ============================================================
 def get_gemini_response(prompt):
-    import hashlib
-
-MODEL_CHAIN = [
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-3.6-flash",
-]
-
-def _cache_conn():
-    c = sqlite3.connect(DB_PATH, check_same_thread=False)
-    c.execute("CREATE TABLE IF NOT EXISTS response_cache (key TEXT PRIMARY KEY, response TEXT)")
-    return c
-
-def get_gemini_response(prompt):
-    key = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
-    try:
-        c = _cache_conn()
-        row = c.execute("SELECT response FROM response_cache WHERE key=?", (key,)).fetchone()
-        c.close()
-        if row:
-            return row[0]
-    except Exception:
-        pass
-
-    try:
-        api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
-    except Exception:
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        return "⚠️ Gemini API key not configured. Please add it in Streamlit secrets."
-
+   
     import google.generativeai as genai
     genai.configure(api_key=api_key)
 
